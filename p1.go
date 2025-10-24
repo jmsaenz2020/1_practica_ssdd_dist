@@ -8,6 +8,7 @@ const MAX_PLAZAS = 2 // plazas por mecanico
 const RED = "\033[1;31m"
 const YELLOW = "\033[1;33m"
 const GREEN = "\033[1;32m"
+const BLUE = "\033[1;34m"
 const BOLD = "\033[1;37m"
 const END = "\033[0m"
 
@@ -44,18 +45,6 @@ func (t Taller)MenuClientes(){
   } else {
     warningMsg("No hay clientes en el taller")
   }
-}
-
-func (t Taller)ObtenerVehiculos() ([]Vehiculo){
-  var vehiculos []Vehiculo
-
-  for _, c := range t.Clientes{
-    for _, v := range c.Vehiculos{
-      vehiculos = append(vehiculos, v)
-    }
-  }
-
-  return vehiculos
 }
 
 func (t Taller)MenuVehiculos(){
@@ -97,16 +86,73 @@ func (t Taller)MenuMecanicos(){
   }
 }
 
-func (t Taller)ListarIncidenciasMecanico(m Mecanico){
+func (t Taller)ObtenerIncidencias() ([]Incidencia){
+  var incidencias []Incidencia
+  
+  infoMsg("Obteniendo incidencias")
+  for _, c := range t.Clientes{
+    for _, v := range c.Vehiculos{
+      for _, i := range v.Incidencias{
+        incidencias = append(incidencias, i)
+      }
+    }
+  }
 
+  return incidencias
 }
 
-func (t Taller)ListarVehiculos(){
+func (t Taller)ObtenerVehiculos() ([]Vehiculo){
+  var vehiculos []Vehiculo
 
+  infoMsg("Obteniendo vehículos")
+  for _, c := range t.Clientes{
+    for _, v := range c.Vehiculos{
+      vehiculos = append(vehiculos, v)
+    }
+  }
+
+  return vehiculos
 }
 
 func (t Taller)ListarIncidencias(){
+  incidencias := t.ObtenerIncidencias()
+  
+  if (len(incidencias) > 0){
+    for _, i := range incidencias{
+      i.Visualizar()
+    }
+  } else {
+    warningMsg("No hay incidencias en el taller")
+  }
+}
 
+func (t Taller)ListarIncidenciasMecanico(m Mecanico){
+  incidencias := t.ObtenerIncidencias()
+
+  if (len(incidencias) > 0){
+    for _, i := range incidencias{
+      for _, m_aux := range i.Mecanicos{
+        if (m.Id == m_aux.Id){ // Añadir función comparar Mecánicos
+          i.Visualizar()
+        }
+      }
+    }
+  } else {
+    warningMsg("No hay incidencias en el taller")
+  }
+}
+
+func (t Taller)ListarVehiculos(){
+  vehiculos := t.ObtenerVehiculos()
+
+  if (len(vehiculos) > 0){
+    fmt.Printf("\t%s·%s", BOLD, END)
+    for _, v := range vehiculos{
+      v.VisualizarMinimo()
+    }
+  } else {
+    warningMsg("No hay vehículos en el taller")
+  }
 }
 
 
@@ -231,6 +277,10 @@ func (m Mecanico)Visualizar(){
 
 func warningMsg(msg string){
   fmt.Printf("%s%s%s\n", YELLOW, msg, END)
+}
+
+func infoMsg(msg string){
+  fmt.Printf("%s%s%s\n", BLUE, msg, END)
 }
 
 func menuFunc(menu []string) (int, int){
