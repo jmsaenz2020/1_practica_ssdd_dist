@@ -26,7 +26,15 @@ func (t Taller)MenuPrincipal(){
   opt, status := menuFunc(menu)
 
   if (status == 0){
-    fmt.Println(menu[opt])
+    switch(opt){
+      case 1:
+        t.ListarIncidencias()
+      case 2:
+        var m Mecanico
+        t.ListarIncidenciasMecanico(m)
+      case 3:
+        t.ListarVehiculos()
+    }
   }
 }
 
@@ -89,6 +97,18 @@ func (t Taller)MenuMecanicos(){
   }
 }
 
+func (t Taller)ListarIncidenciasMecanico(m Mecanico){
+
+}
+
+func (t Taller)ListarVehiculos(){
+
+}
+
+func (t Taller)ListarIncidencias(){
+
+}
+
 
 type Cliente struct{
   Id int
@@ -97,6 +117,39 @@ type Cliente struct{
   Email string
   Vehiculos []Vehiculo
 }
+
+func (c Cliente)Visualizar(){
+  fmt.Printf("%sID:%s %s\n", BOLD, END, c.Id)
+  fmt.Printf("%sNombre:%s %s\n", BOLD, END, c.Nombre)
+  fmt.Printf("%sTeléfono:%s %s\n", BOLD, END, c.Telefono)
+  fmt.Printf("%sEmail:%s %s\n", BOLD, END, c.Email)
+  if (len(c.Vehiculos) > 0){
+    for _, v := range c.Vehiculos{
+      fmt.Printf("\t%s·%s", BOLD, END)
+      v.VisualizarMinimo()
+    }
+  } else {
+    fmt.Println(BOLD, "SIN VEHÍCULOS", END)
+  }
+}
+
+func (c Cliente)Modificar(){
+  
+}
+
+func (c Cliente)ListarVehículos(){  
+
+  if (len(c.Vehiculos) > 0){
+    for _, v := range c.Vehiculos{
+      fmt.Println("-------------------")
+      v.Visualizar()
+      fmt.Println("-------------------")
+    }
+  } else {
+    warningMsg("El cliente no tiene vehículos")
+  }
+}
+
 
 type Vehiculo struct{
   Matricula string // 1324ACB
@@ -107,6 +160,40 @@ type Vehiculo struct{
   Incidencias []Incidencia
 }
 
+func (v Vehiculo)VisualizarMinimo(){
+  fmt.Println(v.Marca, v.Modelo, " (", v.Matricula, ")")
+}
+
+func (v Vehiculo)Visualizar(){
+  fmt.Printf("%sMatrícula:%s %s\n", BOLD, END, v.Matricula)
+  fmt.Printf("%sMarca:%s %s\n", BOLD, END, v.Marca)
+  fmt.Printf("%sModelo:%s %s\n", BOLD, END, v.Modelo)
+  fmt.Printf("%sFecha de entrada:%s %s\n", BOLD, END, v.FechaEntrada)
+  fmt.Printf("%sFecha estimada de salida:%s %s\n", BOLD, END, v.FechaSalida)
+  // Visualizar incidencias (mínimo)
+}
+
+func (v Vehiculo)Modificar(){
+
+}
+
+func (v Vehiculo)Asignar(){
+
+}
+
+func (v Vehiculo)ListarIncidencias(){
+  if (len(v.Incidencias) > 0){
+    for _, i := range v.Incidencias{
+      fmt.Println("-------------------")
+      i.Visualizar()
+      fmt.Println("-------------------")
+    }
+  } else {
+    warningMsg("El cliente no tiene vehículos")
+  }
+}
+
+
 type Incidencia struct{
   Id int
   Mecanicos []Mecanico
@@ -116,6 +203,16 @@ type Incidencia struct{
   Estado int // (0) Cerrada, (1) Abierta, (2) En proceso
 }
 
+func (i Incidencia)Visualizar(){
+  fmt.Printf("%sId:%s %s\n", BOLD, END, i.Id)
+  //fmt.Printf("%sMecánicos:%s %s\n", BOLD, END, i.Mecanicos)
+  fmt.Printf("%sTipo de incidencia:%s %s\n", BOLD, END, i.Tipo)
+  fmt.Printf("%sPrioridad:%s %s\n", BOLD, END, i.Prioridad)
+  fmt.Printf("%sDescripción:%s %s\n", BOLD, END, i.Descripción)
+  fmt.Printf("%sEstado:%s %s\n", BOLD, END, i.Estado)
+}
+
+
 type Mecanico struct{
   Id int
   Nombre string
@@ -124,6 +221,13 @@ type Mecanico struct{
   Alta bool
 }
 
+func (m Mecanico)Visualizar(){
+  fmt.Printf("%sId:%s %s\n", BOLD, END, m.Id)
+  fmt.Printf("%sNombre:%s %s\n", BOLD, END, m.Nombre)
+  fmt.Printf("%sEspecialidad:%s %s\n", BOLD, END, m.Especialidad)
+  fmt.Printf("%sExperiencia:%s %s\n", BOLD, END, m.Experiencia)
+  fmt.Printf("%s¿En alta?:%s %s\n", BOLD, END, m.Alta)
+}
 
 func warningMsg(msg string){
   fmt.Printf("%s%s%s\n", YELLOW, msg, END)
@@ -132,6 +236,7 @@ func warningMsg(msg string){
 func menuFunc(menu []string) (int, int){
   var opt int
 
+  menu = append(menu, "Salir")
   fmt.Printf("%s%s%s\n", BOLD, menu[0], END) // Menu title
 
   for i:= 1; i < len(menu); i++{
@@ -154,15 +259,14 @@ func main(){
     "Clientes",
     "Vehiculos",
     "Incidencias",
-    "Mecánicos",
-    "Salir"}
+    "Mecánicos"}
 
   var t Taller
   var exit bool = false
 
   for{
     opt, status := menuFunc(mainMenu)
-    if status == 0 { // ok
+    if status == 0 { // 0: Ok, 1: Error
       switch opt{
         case 1:
           t.MenuPrincipal()
