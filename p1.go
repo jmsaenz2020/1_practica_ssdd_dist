@@ -40,10 +40,33 @@ func (t Taller)MenuPrincipal(){
 }
 
 func (t Taller)MenuClientes(){
-  if (len(t.Clientes) > 0){
-    return
-  } else {
-    warningMsg("No hay clientes en el taller")
+  var menu []string  
+  var exit bool = false
+  var cliente Cliente
+
+  for ;;{
+    menu = []string{"Menú de clientes", "Crear cliente"}
+    for _, c := range t.Clientes{
+      menu = append(menu, c.Nombre)
+    }
+    
+    opt, status := menuFunc(menu)
+
+    opt--
+    if (status == 0 && opt >= 1 && opt <= len(t.Clientes)){
+      opt--
+      cliente = t.Clientes[opt]
+      cliente = cliente.MenuCliente()
+      t.Clientes[opt] = cliente
+    } else if (status == 0 && opt == 0){ // Crear cliente
+      cliente = crearCliente()
+      t.Clientes = append(t.Clientes, cliente)
+    } else if (status == 0 && opt == len(t.Clientes) + 1){
+      exit = true
+    }
+    if (exit){
+      break
+    }
   }
 }
 
@@ -58,23 +81,12 @@ func (t Taller)MenuVehiculos(){
 }
 
 func (t Taller)MenuIncidencias(){
-  vehiculos := t.ObtenerVehiculos()
-  var incidencias []Incidencia
+  incidencias := t.ObtenerIncidencias()
 
-  
-  if (len(vehiculos) > 0){
-    for _, v := range vehiculos{
-      for _, inc := range v.Incidencias{
-        incidencias = append(incidencias, inc)
-      }
-    }
-    if (len(incidencias) > 0){
-      return
-    } else {
-      warningMsg("No hay incidencias en el taller")
-    }
+  if (len(incidencias) > 0){
+    return
   } else {
-    warningMsg("No hay vehiculos en el taller")
+    warningMsg("No hay incidencias en el taller")
   }
 }
 
@@ -146,7 +158,7 @@ func (t Taller)ListarVehiculos(){
   vehiculos := t.ObtenerVehiculos()
 
   if (len(vehiculos) > 0){
-    fmt.Printf("\t%s·%s", BOLD, END)
+    fmt.Printf("  %s·%s", BOLD, END)
     for _, v := range vehiculos{
       v.VisualizarMinimo()
     }
@@ -164,14 +176,47 @@ type Cliente struct{
   Vehiculos []Vehiculo
 }
 
+func (c Cliente)MenuCliente() (Cliente){
+  menu := []string{
+    "Opciones de " + c.Nombre,
+    "Visualizar",
+    "Modificar datos",
+    "Listar vehículos",
+  }
+  var exit bool = false
+
+
+  for{
+    menu[0] = "Opciones de " + c.Nombre
+    opt, status := menuFunc(menu)
+    if (status == 0){
+      switch opt{
+        case 1:
+          c.Visualizar()
+        case 2:
+          c = c.Modificar()
+        case 3:
+          c.ListarVehiculos()
+        default:
+          exit = true
+      }
+    }
+    if (exit){
+      break
+    }
+  }
+
+  return c
+}
+
 func (c Cliente)Visualizar(){
-  fmt.Printf("%sID:%s %s\n", BOLD, END, c.Id)
+  fmt.Printf("%sID:%s %d\n", BOLD, END, c.Id)
   fmt.Printf("%sNombre:%s %s\n", BOLD, END, c.Nombre)
-  fmt.Printf("%sTeléfono:%s %s\n", BOLD, END, c.Telefono)
+  fmt.Printf("%sTeléfono:%s %d\n", BOLD, END, c.Telefono)
   fmt.Printf("%sEmail:%s %s\n", BOLD, END, c.Email)
   if (len(c.Vehiculos) > 0){
     for _, v := range c.Vehiculos{
-      fmt.Printf("\t%s·%s", BOLD, END)
+      fmt.Printf("  %s·%s", BOLD, END)
       v.VisualizarMinimo()
     }
   } else {
@@ -179,11 +224,64 @@ func (c Cliente)Visualizar(){
   }
 }
 
-func (c Cliente)Modificar(){
-  
+func (c Cliente)Modificar() (Cliente){
+  menu := []string{
+    "Modificar datos de " + c.Nombre,
+    "Id",
+    "Nombre",
+    "Teléfono",
+    "Email",
+    "Vehículos"}
+
+  var aux_int int
+  var aux_str string
+  var exit bool = false
+
+  for{
+    menu[0] = "Modificar datos de " + c.Nombre
+    opt, status := menuFunc(menu)
+    if (status == 0){
+      switch opt{
+        case 1:
+          leerInt(&aux_int)
+          if (aux_int > 0){
+            c.Id = aux_int
+            infoMsg("Id actualizado")
+          }
+        case 2:
+          leerStr(&aux_str)
+          if (len(aux_str) > 0){
+            c.Nombre = aux_str
+            infoMsg("Nombre actualizado")
+          }
+        case 3:
+          leerInt(&aux_int)
+          if (aux_int > 0){
+            c.Telefono = aux_int
+            infoMsg("Telefono actualizado")
+          }
+        case 4:
+          leerStr(&aux_str)
+          if (len(aux_str) > 0){
+            c.Email = aux_str
+            infoMsg("Email actualizado")
+          }
+        case 5:
+          // Opciones Vehiculos
+        default:
+          exit = true
+      }
+      
+    }
+    if exit{
+      break
+    }
+  }
+
+  return c
 }
 
-func (c Cliente)ListarVehículos(){  
+func (c Cliente)ListarVehiculos(){  
 
   if (len(c.Vehiculos) > 0){
     for _, v := range c.Vehiculos{
@@ -275,6 +373,47 @@ func (m Mecanico)Visualizar(){
   fmt.Printf("%s¿En alta?:%s %s\n", BOLD, END, m.Alta)
 }
 
+
+func leerInt(i *int){
+  for{
+    fmt.Print("> ")
+    fmt.Scanf("%d", i)
+    if (*i > 0 || *i == 0){
+      break
+    } else {
+      warningMsg("Valor entero inválido")
+    }
+  }
+}
+
+func leerStr(str *string){
+  for{
+    fmt.Print("> ")
+    fmt.Scanf("%s", str)
+    fmt.Println(len(*str))
+    if (len(*str) > 0){
+      break
+    } else {
+      warningMsg("Cadena de texto inválida")
+    }
+  }
+}
+
+func crearCliente() (Cliente){
+  var c Cliente
+
+  fmt.Printf("%sID%s\n", BOLD, END)
+  leerInt(&c.Id)
+  fmt.Printf("%sNombre%s\n", BOLD, END)
+  leerStr(&c.Nombre)
+  fmt.Printf("%sTeléfono%s\n", BOLD, END)
+  leerInt(&c.Telefono)
+  fmt.Printf("%sEmail%s\b\n", BOLD, END)
+  leerStr(&c.Email)
+
+  return c
+}
+
 func warningMsg(msg string){
   fmt.Printf("%s%s%s\n", YELLOW, msg, END)
 }
@@ -293,8 +432,7 @@ func menuFunc(menu []string) (int, int){
     fmt.Printf("%d.- %s\n", i, menu[i])
   }
 
-  fmt.Print("> ")
-  fmt.Scanf("%d", &opt)
+  leerInt(&opt)
 
   if (opt > 0 && opt < len(menu)){
     return opt, 0
@@ -312,6 +450,7 @@ func main(){
     "Mecánicos"}
 
   var t Taller
+
   var exit bool = false
 
   for{
