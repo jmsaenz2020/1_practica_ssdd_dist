@@ -72,11 +72,27 @@ func (t Taller)MenuClientes(){
 
 func (t Taller)MenuVehiculos(){
   vehiculos := t.ObtenerVehiculos()  
+  var exit bool = false
 
-  if (len(vehiculos) > 0){
-    return
-  } else {
-    warningMsg("No hay vehículos en el taller")
+  for {
+    menu := []string{"Menú de vehículos", "Crear vehículo"}
+    for _, v := range vehiculos{
+      menu = append(menu, v.Info())
+    }
+    opt, status := menuFunc(menu)
+    if status == 0{
+      if opt == 1{
+        // Crear vehículo
+      } else if opt == len(vehiculos) + 2{
+        exit = true
+      } else {
+        vehiculos[opt - 1].MenuVehiculo()
+      }
+          
+    }
+    if exit{
+      break
+    }
   }
 }
 
@@ -267,7 +283,11 @@ func (c Cliente)Modificar() (Cliente){
             infoMsg("Email actualizado")
           }
         case 5:
-          // Opciones Vehiculos
+          if (len(c.Vehiculos) > 0){
+            // Añadir/Emilinar Vehiculos
+          } else {
+            warningMsg("El cliente no tiene vehículos")
+          }
         default:
           exit = true
       }
@@ -304,8 +324,16 @@ type Vehiculo struct{
   Incidencias []Incidencia
 }
 
+func (v Vehiculo)MenuVehiculo(){
+  fmt.Println(v.Matricula)
+}
+
+func (v Vehiculo)Info() (string){
+  return v.Marca + v.Modelo + " (" + v.Matricula + ")"
+}
+
 func (v Vehiculo)VisualizarMinimo(){
-  fmt.Println(v.Marca, v.Modelo, " (", v.Matricula, ")")
+  fmt.Println(v.Info())
 }
 
 func (v Vehiculo)Visualizar(){
