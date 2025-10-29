@@ -67,7 +67,7 @@ func (t Taller)MenuClientes() (Taller){
       cliente = cliente.MenuCliente(t)
       t.Clientes[opt] = cliente
     } else if (status == 0 && opt == 0){ // Crear cliente
-      cliente = crearCliente()
+      cliente = crearCliente(t)
       t.Clientes = append(t.Clientes, cliente)
     } else if (status == 0 && opt == len(t.Clientes) + 1){
       exit = true
@@ -86,20 +86,16 @@ func (t Taller)MenuVehiculos(){
 
   if len(vehiculos) > 0{
     for {
-      menu := []string{"Menú de vehículos", "Crear vehículo"}
+      menu := []string{"Menú de vehículos"}
       for _, v := range vehiculos{
         menu = append(menu, v.Info())
       }
       opt, status := menuFunc(menu)
       if status == 0{
-        if opt == 1{
-          //v := crearVehiculo()
-          //vehiculos = append(vehiculos, v)
-          //t.ActualizarVehiculos(&vehiculos)
-        } else if opt == len(vehiculos) + 2{
+        if opt == len(vehiculos) + 1{
           exit = true
         } else {
-          vehiculos[opt - 2].MenuVehiculo()
+          vehiculos[opt - 1].MenuVehiculo()
         }
       }
       if exit{
@@ -535,8 +531,9 @@ func leerStr(str *string){
   }
 }
 
-func crearCliente() (Cliente){
+func crearCliente(t Taller) (Cliente){
   var c Cliente
+  var exit bool = false
 
   fmt.Printf("%sID%s\n", BOLD, END)
   leerInt(&c.Id)
@@ -547,11 +544,29 @@ func crearCliente() (Cliente){
   fmt.Printf("%sEmail%s\b\n", BOLD, END)
   leerStr(&c.Email)
 
+  menu := []string{"Vehículos", "Nuevo vehículo"}
+  for{
+    opt, status := menuFunc(menu)
+
+    if status == 0{
+      if opt == 1{
+        v := crearVehiculo(t)
+        c.Vehiculos = append(c.Vehiculos, v)
+      } else {
+        exit = true
+      }
+    }
+    if exit{
+      break
+    }
+  }
+
   return c
 }
 
-func crearVehiculo() (Vehiculo){
+func crearVehiculo(t Taller) (Vehiculo){
   var v Vehiculo
+  var exit bool = false
 
   fmt.Printf("%sMatrícula%s\n", BOLD, END)
   leerStr(&v.Matricula)
@@ -564,7 +579,55 @@ func crearVehiculo() (Vehiculo){
   fmt.Printf("%sFecha esperada de salida%s\n", BOLD, END)
   leerStr(&v.FechaSalida)
 
+  menu := []string{"Incidencias", "Nueva Incidencia"}
+  for{
+    opt, status := menuFunc(menu)
+
+    if status == 0{
+      if opt == 1{
+        i := crearIncidencia(t)
+        v.Incidencias = append(v.Incidencias, i)
+      } else {
+        exit = true
+      }
+    }
+    if exit{
+      break
+    }
+  }
+
   return v
+}
+
+func crearIncidencia(t Taller) (Incidencia){
+  var i Incidencia
+  menu_tipo := []string{"Tipo", "Mecánica", "Eléctrica", "Carroceria"}
+  menu_prioridad := []string{"Prioridad", "Baja", "Media", "Alta"}
+
+  fmt.Printf("%sID%s\n", BOLD, END)
+  leerInt(&i.Id)
+  
+  for{
+    opt, status := menuFunc(menu_tipo)
+    if status == 0 && opt < 4{
+      i.Tipo = opt - 1
+      break
+    }
+  }
+
+  for{
+    opt, status := menuFunc(menu_prioridad)
+    if status == 0 && opt < 4{
+      i.Prioridad = opt
+      break
+    }
+  }
+
+  fmt.Printf("%sDescripción%s\n", BOLD, END)
+  leerStr(&i.Descripción)
+  i.Estado = 1 // Abierta
+
+  return i
 }
 
 func warningMsg(msg string){
