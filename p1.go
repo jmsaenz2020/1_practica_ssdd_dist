@@ -63,7 +63,7 @@ func (t Taller)MenuClientes() (Taller){
     if (status == 0 && opt >= 1 && opt <= len(t.Clientes)){
       opt--
       cliente = t.Clientes[opt]
-      cliente = cliente.MenuCliente()
+      cliente = cliente.MenuCliente(t)
       t.Clientes[opt] = cliente
     } else if (status == 0 && opt == 0){ // Crear cliente
       cliente = crearCliente()
@@ -91,7 +91,9 @@ func (t Taller)MenuVehiculos(){
     opt, status := menuFunc(menu)
     if status == 0{
       if opt == 1{
-        //v := crearVehiculo()
+        v := crearVehiculo()
+        vehiculos = append(vehiculos, v)
+        //t.ActualizarVehiculos(&vehiculos)
       } else if opt == len(vehiculos) + 2{
         exit = true
       } else {
@@ -150,6 +152,42 @@ func (t Taller)ObtenerVehiculos() ([]Vehiculo){
   return vehiculos
 }
 
+func (t Taller)ObtenerVehiculo() (Vehiculo, int){
+  var v Vehiculo
+  vehiculos := t.ObtenerVehiculos()
+  menu := []string{"Selecciona un vehículo"}
+  var exit bool = false  
+
+  if len(vehiculos) > 0{
+    for _, aux := range vehiculos{
+      for _, c := range t.Clientes{
+        if c.TieneVehiculo(aux){
+          break
+        }
+      }
+      fmt.Println("Nuevo coche")
+      menu = append(menu, aux.Info())
+    }
+
+    for{
+      opt, status := menuFunc(menu)
+      if status == 0{
+        if opt <= len(vehiculos){
+          v = vehiculos[opt - 1]
+        } else if opt == len(vehiculos) + 1{
+          exit = true
+        }
+      }
+      if exit{
+        break
+      }
+    }
+    return v, 0
+  }
+  return v, 1
+  
+}
+
 func (t Taller)ListarIncidencias(){
   incidencias := t.ObtenerIncidencias()
   
@@ -200,7 +238,7 @@ type Cliente struct{
   Vehiculos []Vehiculo
 }
 
-func (c Cliente)MenuCliente() (Cliente){
+func (c Cliente)MenuCliente(t Taller) (Cliente){
   menu := []string{
     "Opciones de " + c.Nombre,
     "Visualizar",
@@ -218,7 +256,7 @@ func (c Cliente)MenuCliente() (Cliente){
         case 1:
           c.Visualizar()
         case 2:
-          c = c.Modificar()
+          c = c.Modificar(t)
         case 3:
           c.ListarVehiculos()
         default:
@@ -233,10 +271,10 @@ func (c Cliente)MenuCliente() (Cliente){
   return c
 }
 
-func (c Cliente)MenuVehiculos() (Cliente){
+func (c Cliente)MenuVehiculos(t Taller) (Cliente){
   menu := []string{
     "Opciones de modificación de vehículos",
-    "Crear",
+    "Asignar",
     "Modificar",
     "Eliminar"}
   var exit bool = false
@@ -247,8 +285,11 @@ func (c Cliente)MenuVehiculos() (Cliente){
     if (status == 0){
       switch opt{
         case 1:
-          v = crearVehiculo()
-          c.Vehiculos = append(c.Vehiculos, v)
+          v, status = t.ObtenerVehiculo()
+          if (status == 0){
+            v.Asignar(&c)
+            c.Vehiculos = append(c.Vehiculos, v)
+          }
         case 2:
           if (len(c.Vehiculos) > 0){
             // Modificar Vehiculos
@@ -288,7 +329,7 @@ func (c Cliente)Visualizar(){
   }
 }
 
-func (c Cliente)Modificar() (Cliente){
+func (c Cliente)Modificar(t Taller) (Cliente){
   menu := []string{
     "Modificar datos de " + c.Nombre,
     "Id",
@@ -331,7 +372,7 @@ func (c Cliente)Modificar() (Cliente){
             infoMsg("Email actualizado")
           }
         case 5:
-          c = c.MenuVehiculos()
+          c = c.MenuVehiculos(t)
         default:
           exit = true
       }
@@ -358,6 +399,17 @@ func (c Cliente)ListarVehiculos(){
   }
 }
 
+func (c Cliente)TieneVehiculo(v Vehiculo) (bool){
+  if (len(c.Vehiculos) > 0){
+    for _, vc := range c.Vehiculos{
+      if vc.Comparar(v){
+        return true
+      }
+    }
+  }
+  
+  return false
+}
 
 type Vehiculo struct{
   Matricula string // 1324ACB
@@ -373,7 +425,7 @@ func (v Vehiculo)MenuVehiculo(){
 }
 
 func (v Vehiculo)Info() (string){
-  return v.Marca + v.Modelo + " (" + v.Matricula + ")"
+  return v.Marca + " " + v.Modelo + " (" + v.Matricula + ")"
 }
 
 func (v Vehiculo)VisualizarMinimo(){
@@ -393,8 +445,12 @@ func (v Vehiculo)Modificar(){
 
 }
 
-func (v Vehiculo)Asignar(){
+func (v Vehiculo)Asignar(c *Cliente){
 
+}
+
+func (v Vehiculo)Comparar(aux Vehiculo) (bool){
+  return v.Matricula == aux.Matricula
 }
 
 func (v Vehiculo)ListarIncidencias(){
