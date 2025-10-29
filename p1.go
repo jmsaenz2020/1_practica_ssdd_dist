@@ -190,7 +190,9 @@ func (t Taller)ObtenerVehiculo() (Vehiculo, int){
 }
 
 func (t Taller)EstaLleno() (bool){
-  return false // Cambiar cuando aplique mecánicos
+  vehiculos := t.ObtenerVehiculos()
+
+  return !(len(vehiculos) < len(t.Mecanicos)*MAX_PLAZAS) 
 }
 
 func (t Taller)ListarIncidencias(){
@@ -227,7 +229,7 @@ func (t Taller)ListarVehiculos(){
   if (len(vehiculos) > 0){
     fmt.Printf("  %s·%s", BOLD, END)
     for _, v := range vehiculos{
-      v.VisualizarMinimo()
+      fmt.Println(v.Info())
     }
   } else {
     warningMsg("No hay vehículos en el taller")
@@ -291,9 +293,11 @@ func (c Cliente)MenuVehiculos(t Taller) (Cliente){
       switch opt{
         case 1:
           v, status = t.ObtenerVehiculo()
-          if (status == 0 && t.EstaLleno()){
-            v.Asignar(&c)
-            c.Vehiculos = append(c.Vehiculos, v)
+          if (status == 0 && !t.EstaLleno()){
+            //v.Asignar(&c)
+            //c.Vehiculos = append(c.Vehiculos, v)
+          } else {
+            warningMsg("El taller está lleno")
           }
         case 2:
           if (len(c.Vehiculos) > 0){
@@ -327,7 +331,7 @@ func (c Cliente)Visualizar(){
   if (len(c.Vehiculos) > 0){
     for _, v := range c.Vehiculos{
       fmt.Printf("  %s·%s", BOLD, END)
-      v.VisualizarMinimo()
+      fmt.Println(v.Info())
     }
   } else {
     fmt.Println(BOLD, "SIN VEHÍCULOS", END)
@@ -431,10 +435,6 @@ func (v Vehiculo)MenuVehiculo(){
 
 func (v Vehiculo)Info() (string){
   return v.Marca + " " + v.Modelo + " (" + v.Matricula + ")"
-}
-
-func (v Vehiculo)VisualizarMinimo(){
-  fmt.Println(v.Info())
 }
 
 func (v Vehiculo)Visualizar(){
@@ -549,7 +549,7 @@ func crearCliente(t Taller) (Cliente){
     opt, status := menuFunc(menu)
 
     if status == 0{
-      if opt == 1{
+      if opt == 1 && !t.EstaLleno(){
         v := crearVehiculo(t)
         c.Vehiculos = append(c.Vehiculos, v)
       } else {
