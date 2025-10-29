@@ -84,26 +84,30 @@ func (t Taller)MenuVehiculos(){
   vehiculos := t.ObtenerVehiculos()  
   var exit bool = false
 
-  for {
-    menu := []string{"Menú de vehículos", "Crear vehículo"}
-    for _, v := range vehiculos{
-      menu = append(menu, v.Info())
-    }
-    opt, status := menuFunc(menu)
-    if status == 0{
-      if opt == 1{
-        v := crearVehiculo()
-        vehiculos = append(vehiculos, v)
-        //t.ActualizarVehiculos(&vehiculos)
-      } else if opt == len(vehiculos) + 2{
-        exit = true
-      } else {
-        vehiculos[opt - 2].MenuVehiculo()
+  if len(vehiculos) > 0{
+    for {
+      menu := []string{"Menú de vehículos", "Crear vehículo"}
+      for _, v := range vehiculos{
+        menu = append(menu, v.Info())
+      }
+      opt, status := menuFunc(menu)
+      if status == 0{
+        if opt == 1{
+          //v := crearVehiculo()
+          //vehiculos = append(vehiculos, v)
+          //t.ActualizarVehiculos(&vehiculos)
+        } else if opt == len(vehiculos) + 2{
+          exit = true
+        } else {
+          vehiculos[opt - 2].MenuVehiculo()
+        }
+      }
+      if exit{
+        break
       }
     }
-    if exit{
-      break
-    }
+  } else {
+    warningMsg("No hay vehículos en el taller")
   }
 }
 
