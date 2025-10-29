@@ -13,7 +13,8 @@ const BOLD = "\033[1;37m"
 const END = "\033[0m"
 
 type Taller struct{
-  Clientes []Cliente
+  Clientes []Cliente // Plazas
+  PlazasOcupadas int // Sirve si el cliente tiene una incidencia en un vehículo
   Mecanicos []Mecanico
 }
 
@@ -97,7 +98,7 @@ func (t Taller)MenuVehiculos(){
       } else if opt == len(vehiculos) + 2{
         exit = true
       } else {
-        vehiculos[opt - 1].MenuVehiculo()
+        vehiculos[opt - 2].MenuVehiculo()
       }
     }
     if exit{
@@ -157,7 +158,7 @@ func (t Taller)ObtenerVehiculo() (Vehiculo, int){
   vehiculos := t.ObtenerVehiculos()
   menu := []string{"Selecciona un vehículo"}
   var exit bool = false  
-
+  
   if len(vehiculos) > 0{
     for _, aux := range vehiculos{
       for _, c := range t.Clientes{
@@ -186,6 +187,10 @@ func (t Taller)ObtenerVehiculo() (Vehiculo, int){
   }
   return v, 1
   
+}
+
+func (t Taller)EstaLleno() (bool){
+  return false // Cambiar cuando aplique mecánicos
 }
 
 func (t Taller)ListarIncidencias(){
@@ -286,7 +291,7 @@ func (c Cliente)MenuVehiculos(t Taller) (Cliente){
       switch opt{
         case 1:
           v, status = t.ObtenerVehiculo()
-          if (status == 0){
+          if (status == 0 && t.EstaLleno()){
             v.Asignar(&c)
             c.Vehiculos = append(c.Vehiculos, v)
           }
@@ -592,8 +597,30 @@ func main(){
     "Vehiculos",
     "Incidencias",
     "Mecánicos"}
-
   var t Taller
+
+  // INICIALIZAR
+  v := Vehiculo{
+    Matricula:"1234ABC",
+    Marca: "Dacia",
+    Modelo: "Sandero",
+    FechaEntrada: "14-10-2025",
+    FechaSalida: "09-11-2025"}
+  c := Cliente{
+    Id: 12345678,
+    Nombre: "Pepito",
+    Telefono: 12345678,
+    Email: "pepito@webmail.org"}
+  m := Mecanico{
+    Id: 12345678,
+    Nombre: "Luis Martinez",
+    Especialidad: 1,
+    Experiencia: 4,
+    Alta: true}
+  c.Vehiculos = append(c.Vehiculos, v)
+  t.Clientes = append(t.Clientes, c)
+  t.Mecanicos = append(t.Mecanicos, m)
+  // FIN INICIALIZAR
 
   var exit bool = false
 
