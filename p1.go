@@ -113,9 +113,18 @@ func (t Taller)MenuIncidencias(){
     for {
       menu := []string{"Menú de Incidencias"}
       for _, i := range incidencias{
-        menu = append(menu, string(i.Id))
+        menu = append(menu, i.Descripcion)
       }
-
+      opt, status := menuFunc(menu)
+      
+      if status == 0{
+        if opt == len(incidencias) + 1{
+          break
+        } else {
+          // incidencias[opt - 1] = incidencias[opt - 1].MenuIncidencia()
+          // Actualizar Incidencias
+        }
+      }
     }
   } else {
     warningMsg("No hay incidencias en el taller")
@@ -137,6 +146,7 @@ func (t Taller)ObtenerIncidencias() ([]Incidencia){
   for _, c := range t.Clientes{
     for _, v := range c.Vehiculos{
       for _, i := range v.Incidencias{
+        i.Visualizar()
         incidencias = append(incidencias, i)
       }
     }
