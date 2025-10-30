@@ -519,13 +519,13 @@ func (v Vehiculo)Modificar() (Vehiculo){
             }
           }
         case 3:
-          leerStr(&aux)
+          leerFecha(&aux)
           if len(aux) > 0{
             v.FechaEntrada = aux
             infoMsg("Fecha de entrada actualizada")
           }
         case 4:
-          leerStr(&aux)
+          leerFecha(&aux)
           if len(aux) > 0{
             v.FechaSalida = aux
             infoMsg("Fecha de salida actualizada")
@@ -634,12 +634,33 @@ func (m Mecanico)Visualizar(){
   fmt.Printf("%s¿En alta?:%s %s\n", BOLD, END, m.Alta)
 }
 
+func leerFecha(aux *string){
+  var dia int
+  var mes int
+  var anyo int
+
+  for{
+    fmt.Println("Día")
+    leerInt(&dia)
+    fmt.Println("Mes")
+    leerInt(&mes)
+    fmt.Println("Año")
+    leerInt(&anyo)
+    
+    if (dia > 0 && dia <= 31 && mes > 0 && mes <= 12 && anyo > 0){
+      *aux = fmt.Sprintf("%d-%d-%d", dia, mes, anyo)
+      return
+    } else if (dia == 0 && mes == 0 && anyo == 0){
+      return
+    }
+  }
+}
 
 func leerInt(i *int){
   for{
     fmt.Print("> ")
     fmt.Scanf("%d", i)
-    if (*i > 0 || *i == 0){
+    if (*i >= 0){
       break
     } else {
       warningMsg("Valor entero inválido")
