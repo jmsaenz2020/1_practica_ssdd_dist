@@ -14,7 +14,6 @@ const END = "\033[0m"
 
 type Taller struct{
   Clientes []Cliente // Plazas
-  PlazasOcupadas int // Sirve si el cliente tiene una incidencia en un vehículo
   Mecanicos []Mecanico
 }
 
@@ -95,7 +94,7 @@ func (t Taller)MenuVehiculos(){
         if opt == len(vehiculos) + 1{
           exit = true
         } else {
-          vehiculos[opt - 1].MenuVehiculo()
+          vehiculos[opt - 1] = vehiculos[opt - 1].MenuVehiculo()
         }
       }
       if exit{
@@ -111,7 +110,13 @@ func (t Taller)MenuIncidencias(){
   incidencias := t.ObtenerIncidencias()
 
   if (len(incidencias) > 0){
-    return
+    for {
+      menu := []string{"Menú de Incidencias"}
+      for _, i := range incidencias{
+        menu = append(menu, string(i.Id))
+      }
+
+    }
   } else {
     warningMsg("No hay incidencias en el taller")
   }
@@ -285,14 +290,14 @@ func (c Cliente)MenuVehiculos(t Taller) (Cliente){
     "Modificar",
     "Eliminar"}
   var exit bool = false
-  var v Vehiculo
+  //var v Vehiculo
 
   for{
     opt, status := menuFunc(menu)
     if (status == 0){
       switch opt{
         case 1:
-          v, status = t.ObtenerVehiculo()
+          //v, status = t.ObtenerVehiculo()
           if (status == 0 && !t.EstaLleno()){
             //v.Asignar(&c)
             //c.Vehiculos = append(c.Vehiculos, v)
@@ -429,8 +434,32 @@ type Vehiculo struct{
   Incidencias []Incidencia
 }
 
-func (v Vehiculo)MenuVehiculo(){
-  fmt.Println(v.Matricula)
+func (v Vehiculo)MenuVehiculo() (Vehiculo){
+  var exit bool = false
+
+  for{
+    titulo := "Menu del " + v.Marca + " " + v.Modelo
+    menu := []string{titulo, "Visualizar", "Modificar", "Listar Incidencias"}
+    opt, status := menuFunc(menu)
+
+    if status == 0{
+      switch opt{
+        case 1:
+          v.Visualizar()
+        case 2:
+          v = v.Modificar()
+        case 3:
+          v.ListarIncidencias()
+        default:
+          exit = true
+      }
+    }
+    if exit{
+      break
+    }
+  }
+
+  return v
 }
 
 func (v Vehiculo)Info() (string){
@@ -443,15 +472,76 @@ func (v Vehiculo)Visualizar(){
   fmt.Printf("%sModelo:%s %s\n", BOLD, END, v.Modelo)
   fmt.Printf("%sFecha de entrada:%s %s\n", BOLD, END, v.FechaEntrada)
   fmt.Printf("%sFecha estimada de salida:%s %s\n", BOLD, END, v.FechaSalida)
-  // Visualizar incidencias (mínimo)
+  fmt.Printf("%sIncidencias%s\n", BOLD, END)
+  if len(v.Incidencias) > 0{ 
+    for _, i := range v.Incidencias{
+      fmt.Printf("  %s·%s %s", BOLD, END, i.Descripcion)
+    }
+  } else {
+    fmt.Println(BOLD, "SIN INCIDENCIAS", END)
+  }
+  fmt.Println()
 }
 
-func (v Vehiculo)Modificar(){
+func (v Vehiculo)Modificar() (Vehiculo){
+  menu := []string{
+    "Modificar datos",
+    "Matricula",
+    "Marca y modelo",
+    "Fecha de entrada",
+    "Fecha de salida",
+    "Incidencias"}
+  var exit bool = false
+  var aux string
 
-}
+  for{
+    opt, status := menuFunc(menu)
+    
+    if status == 0{
+      switch opt{
+        case 1:
+          leerStr(&aux)
+          if len(aux) > 0{
+            v.Matricula = aux
+            infoMsg("Matrícula actualizada")
+          }
+        case 2:
+          fmt.Println("Marca")
+          leerStr(&aux)
+          if len(aux) > 0{
+            marca := aux
+            fmt.Println("Modelo")
+            leerStr(&aux)
+            if len(aux) > 0{
+              v.Marca = marca
+              v.Modelo = aux
+              infoMsg("Marca y modelo actualizados")
+            }
+          }
+        case 3:
+          leerStr(&aux)
+          if len(aux) > 0{
+            v.FechaEntrada = aux
+            infoMsg("Fecha de entrada actualizada")
+          }
+        case 4:
+          leerStr(&aux)
+          if len(aux) > 0{
+            v.FechaSalida = aux
+            infoMsg("Fecha de salida actualizada")
+          }
+        case 5:
+          // Incidencias
+        default:
+          exit = true
+      }
+    }
+    if exit{
+      break
+    }
+  }
 
-func (v Vehiculo)Asignar(c *Cliente){
-
+  return v
 }
 
 func (v Vehiculo)Comparar(aux Vehiculo) (bool){
@@ -476,19 +566,57 @@ type Incidencia struct{
   Mecanicos []Mecanico
   Tipo int // Mecánica, eléctrica, carroceria (0, 1, 2)
   Prioridad int // 1 a 3 (alta a baja)
-  Descripción string
+  Descripcion string
   Estado int // (0) Cerrada, (1) Abierta, (2) En proceso
 }
 
 func (i Incidencia)Visualizar(){
-  fmt.Printf("%sId:%s %s\n", BOLD, END, i.Id)
+  fmt.Printf("%sId:%s %d\n", BOLD, END, i.Id)
   //fmt.Printf("%sMecánicos:%s %s\n", BOLD, END, i.Mecanicos)
-  fmt.Printf("%sTipo de incidencia:%s %s\n", BOLD, END, i.Tipo)
-  fmt.Printf("%sPrioridad:%s %s\n", BOLD, END, i.Prioridad)
-  fmt.Printf("%sDescripción:%s %s\n", BOLD, END, i.Descripción)
-  fmt.Printf("%sEstado:%s %s\n", BOLD, END, i.Estado)
+  fmt.Printf("%sTipo de incidencia:%s %s\n", BOLD, END, i.ObtenerTipo())
+  fmt.Printf("%sPrioridad:%s %s\n", BOLD, END, i.ObtenerPrioridad())
+  fmt.Printf("%sDescripción:%s %s\n", BOLD, END, i.Descripcion)
+  fmt.Printf("%sEstado:%s %s\n", BOLD, END, i.ObtenerEstado())
 }
 
+func (i Incidencia)ObtenerTipo() (string){
+  switch i.Tipo{
+    case 0:
+      return "Mecánica"
+    case 1:
+      return "Eléctrica"
+    case 2:
+      return "Carrocería"
+    default:
+      return "Otro"
+  }
+}
+
+func (i Incidencia)ObtenerPrioridad() (string){
+  switch i.Prioridad{
+    case 1:
+      return "1 (Alta)"
+    case 2:
+      return "2 (Media)"
+    case 3:
+      return "3 (Baja)"
+    default:
+      return "Sin prioridad"
+  }
+}
+
+func (i Incidencia)ObtenerEstado() (string){
+  switch i.Estado{
+    case 0:
+      return "Cerrado"
+    case 1:
+      return "Abierto"
+    case 2:
+      return "En proceso"
+    default:
+      return "Desconocido"
+  }
+}
 
 type Mecanico struct{
   Id int
@@ -624,7 +752,7 @@ func crearIncidencia(t Taller) (Incidencia){
   }
 
   fmt.Printf("%sDescripción%s\n", BOLD, END)
-  leerStr(&i.Descripción)
+  leerStr(&i.Descripcion)
   i.Estado = 1 // Abierta
 
   return i
@@ -684,6 +812,15 @@ func main(){
     Especialidad: 1,
     Experiencia: 4,
     Alta: true}
+  i := Incidencia{
+    Id: 1,
+    Tipo: 0,
+    Prioridad: 2,
+    Descripcion: "Cambio de embrague",
+    Estado: 1}
+
+  i.Mecanicos = append(i.Mecanicos, m)
+  v.Incidencias = append(v.Incidencias, i)
   c.Vehiculos = append(c.Vehiculos, v)
   t.Clientes = append(t.Clientes, c)
   t.Mecanicos = append(t.Mecanicos, m)
