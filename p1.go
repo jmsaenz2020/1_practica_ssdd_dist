@@ -8,6 +8,7 @@ const PLAZAS_MECANICO = 2
 const BOLD = "\033[1;37m"
 const RED = "\033[1;31m"
 const YELLOW = "\033[1;33m"
+const BLUE = "\033[1;34m"
 const END = "\033[0m"
 
 type Taller struct{
@@ -60,6 +61,33 @@ func (t Taller)ObtenerMecanicoPorId(id int) (Mecanico){
   return res
 }
 
+func (t Taller)ObtenerMecanicosDisponibles() ([]Mecanico){
+  var mecanicos []Mecanico  
+
+  for _, m := range t.Mecanicos{
+    if m.Alta{
+      mecanicos = append(mecanicos, m)
+    }
+  }
+
+  return mecanicos
+}
+
+func (t Taller)MecanicosDisponibles(){
+  for _, m := range t.Mecanicos{
+    if m.Alta{
+      fmt.Println(m.Info())
+    }
+  }
+}
+
+func (t *Taller)ModificarMecanico(modif Mecanico){
+  for i, m := range t.Mecanicos{
+    if m.Igual(modif){
+      t.Mecanicos[i] = modif
+    }
+  }
+}
 
 type Mecanico struct{
   Id int
@@ -69,32 +97,66 @@ type Mecanico struct{
   Alta bool
 }
 
+func (m Mecanico)Info() (string){
+  return fmt.Sprintf("%s (%03d)\n", m.Nombre, m.Id)
+}
+
 func (m Mecanico)Visualizar(){
-  fmt.Printf("%s ID: %s%03d\n", BOLD, END, m.Id)
-  fmt.Printf("%s Nombre: %s%s\n", BOLD, END, m.Nombre)
-  fmt.Printf("%s Especialidad: %s%s\n", BOLD, END, m.ObtenerEspecialidad())
-  fmt.Printf("%s Experiencia: %s%d años\n", BOLD, END, m.Experiencia)
-  fmt.Printf("%s ¿Está de alta? %s%s\n", BOLD, END, m.Alta)
+  fmt.Printf("%sID: %s%03d\n", BOLD, END, m.Id)
+  fmt.Printf("%sNombre: %s%s\n", BOLD, END, m.Nombre)
+  fmt.Printf("%sEspecialidad: %s%s\n", BOLD, END, m.ObtenerEspecialidad())
+  fmt.Printf("%sExperiencia: %s%d años\n", BOLD, END, m.Experiencia)
+  fmt.Printf("%s¿Está de alta? %s%t\n", BOLD, END, m.Alta)
+}
+
+func (m1 Mecanico)Igual(m2 Mecanico) (bool){
+  return m1.Id == m2.Id
 }
 
 func (m *Mecanico)Modificar(){
-  titulo := fmt.Sprintf("Modificar datos de %s", m.Nombre)
   menu := []string{
-    titulo,
+    "Modificar datos de cliente",
     "Nombre",
     "Especialidad",
-    "Experiencia"}
+    "Experiencia",
+    "Dar de baja"}
+  var buf string
+  var num int
 
   for{
+    if !m.Alta{
+      menu[len(menu) - 1] = "Dar de alta"
+    } else {
+      menu[len(menu) - 1] = "Dar de baja"
+    }
+    menu[0] = fmt.Sprintf("Modificar datos de %s", m.Nombre)
     opt, status := menuFunc(menu)
     if status == 0{
       switch opt{
         case 1:
-          fmt.Println(m.Nombre)
+          leerStr(&buf)
+          m.Nombre = buf
+          infoMsg("Nombre modificado")
         case 2:
-          fmt.Println(m.ObtenerEspecialidad())
+          menu_esp := []string{
+            "Selecciona especialidad",
+            "Mecánica",
+            "Electrónica",
+            "Carrocería"}
+          opt, status = menuFunc(menu_esp)
+          if status == 0{
+            esp := m.ObtenerEspecialidad()
+            m.Especialidad = opt - 1
+            msg := fmt.Sprintf("Especialidad modificada: %s->%s", esp, m.ObtenerEspecialidad())
+            infoMsg(msg)
+          }
         case 3:
-          fmt.Println(m.Experiencia)
+          leerInt(&num)
+          m.Experiencia = num
+          infoMsg("Experiencia modificada")
+        case 4:
+          m.Alta = !m.Alta
+          infoMsg("Estado modificado")
       }
     } else if status == 2{
       break
@@ -117,18 +179,22 @@ func (m Mecanico)ObtenerEspecialidad() (string){
 
 
 func errorMsg(msg string){
-  fmt.Printf("%s%s%s", RED, msg, END)
+  fmt.Printf("%s%s%s\n", RED, msg, END)
 }
 
 func warningMsg(msg string){
-  fmt.Printf("%s%s%s", YELLOW, msg, END)
+  fmt.Printf("%s%s%s\n", YELLOW, msg, END)
+}
+
+func infoMsg(msg string){
+  fmt.Printf("%s%s%s\n", BLUE, msg, END)
 }
 
 func leerInt(i *int){
   for{
     fmt.Print("> ")
     fmt.Scanf("%d", i)
-    if (*i >= 0){
+    if *i >= 0{
       break
     } else {
       warningMsg("Valor entero inválido")
@@ -140,7 +206,7 @@ func leerStr(str *string){
   for{
     fmt.Print("> ")
     fmt.Scanf("%s", str)
-    if (len(*str) > 0){
+    if len(*str) > 0{
       break
     } else {
       warningMsg("Cadena de texto inválida")
@@ -178,4 +244,6 @@ func main(){
   m = t.ObtenerMecanicoPorId(1)
   m.Visualizar()
   m.Modificar()
+  t.ModificarMecanico(m)
+  t.MecanicosDisponibles()
 }
