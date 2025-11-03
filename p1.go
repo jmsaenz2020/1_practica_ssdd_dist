@@ -61,9 +61,7 @@ func (t *Taller)MenuMecanicos(){
       opt, status := menuFunc(menu)
       
       if status == 0{
-        if opt > 0 && opt <= len(t.Mecanicos) - 1{
-          t.Mecanicos[opt - 1].Menu()
-        }
+        t.Mecanicos[opt - 1].Menu()
       } else if status == 2{
         break
       }
@@ -196,7 +194,29 @@ type Mecanico struct{
 }
 
 func (m *Mecanico)Menu(){
+  menu := []string{
+    "Menu de mecánico",
+    "Visualizar",
+    "Modificar"}
   
+  for{
+    menu[0] = fmt.Sprintf("Menu de %s", m.Nombre)
+
+    opt, status := menuFunc(menu)
+
+    if status == 0{
+      switch opt{
+        case 1:
+          m.Visualizar()
+        case 2:
+          m.Modificar()
+        default:
+          continue
+      }
+    } else if status == 2{
+      break
+    }
+  }
 }
 
 func (m Mecanico)Info() (string){
@@ -217,7 +237,7 @@ func (m1 Mecanico)Igual(m2 Mecanico) (bool){
 
 func (m *Mecanico)Modificar(){
   menu := []string{
-    "Modificar datos de cliente",
+    "Modificar datos de mecánico",
     "Nombre",
     "Especialidad",
     "Experiencia",
