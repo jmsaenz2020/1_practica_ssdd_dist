@@ -12,8 +12,65 @@ const BLUE = "\033[1;34m"
 const END = "\033[0m"
 
 type Taller struct{
+  Clientes []Cliente
+  Plazas *[]Vehiculo
   Mecanicos []Mecanico
   UltimoId int
+}
+
+func (t *Taller)Menu(){
+  menu := []string{
+    "Menu del taller",
+    "Listar incidencias",
+    "Listar vehiculos",
+    "Listar incidencias de mecánico",
+    "Mecánicos disponibles"}
+
+  for{
+    opt, status := menuFunc(menu)
+    
+    if status == 0{
+      switch opt{
+        case 1:
+          // Listar Incidencias
+        case 2:
+          // Listar Vehiculos
+        case 3:
+          // Listar por mecánico
+        case 4:
+          t.MecanicosDisponibles()
+        default:
+          continue
+      }
+    } else if status == 2{
+      break
+    }
+  }
+}
+
+func (t *Taller)MenuMecanicos(){
+  var menu []string
+
+  if len(t.Mecanicos) > 0{
+    for{
+      menu = []string{"Selecciona un mecánico"}
+      for _, m := range t.Mecanicos{
+        menu = append(menu, m.Info())
+      }
+
+      opt, status := menuFunc(menu)
+      
+      if status == 0{
+        if opt > 0 && opt <= len(t.Mecanicos) - 1{
+          t.Mecanicos[opt - 1].Menu()
+        }
+      } else if status == 2{
+        break
+      }
+    }
+  } else {
+    warningMsg("No hay mecánicos en el taller")
+  }
 }
 
 func (t *Taller)CrearMecanico(nombre string, especialidad int, experiencia int){
@@ -47,6 +104,31 @@ func (t *Taller)CrearMecanico(nombre string, especialidad int, experiencia int){
     m.Alta = true
     t.Mecanicos = append(t.Mecanicos, m)
   }
+}
+
+func (t *Taller)EliminarMecanico(m Mecanico){
+  
+  indice := t.ObtenerIndiceMecanico(m)
+    
+  if indice >= 0{ // Eliminar
+    lista := t.Mecanicos
+    lista[indice] = lista[len(lista) - 1]
+    t.Mecanicos = lista[:len(lista) - 1]
+  } else {
+    errorMsg("No se pudo eliminar al mecánico")
+  }
+}
+
+func (t Taller)ObtenerIndiceMecanico(m_in Mecanico) (int){
+  var res int = -1
+
+  for i, m := range t.Mecanicos{
+    if m.Igual(m_in){
+      res = i
+    }
+  }
+
+  return res
 }
 
 func (t Taller)ObtenerMecanicoPorId(id int) (Mecanico){
@@ -89,6 +171,22 @@ func (t *Taller)ModificarMecanico(modif Mecanico){
   }
 }
 
+
+type Cliente struct{
+
+}
+
+
+type Vehiculo struct{
+
+}
+
+
+type Incidencia struct{
+
+}
+
+
 type Mecanico struct{
   Id int
   Nombre string
@@ -97,8 +195,12 @@ type Mecanico struct{
   Alta bool
 }
 
+func (m *Mecanico)Menu(){
+  
+}
+
 func (m Mecanico)Info() (string){
-  return fmt.Sprintf("%s (%03d)\n", m.Nombre, m.Id)
+  return fmt.Sprintf("%s (%03d)", m.Nombre, m.Id)
 }
 
 func (m Mecanico)Visualizar(){
@@ -237,13 +339,36 @@ func menuFunc(menu []string) (int, int){
 
 func main(){
   var t Taller
-  var m Mecanico
+  
+  menu := []string{
+    "Menu principal",
+    "Taller",
+    "Clientes",
+    "Vehiculos",
+    "Incidencias",
+    "Mecánicos"}
 
   t.CrearMecanico("Pepe", 0, 0)
-  t.CrearMecanico("Pepe", 0, 0)
-  m = t.ObtenerMecanicoPorId(1)
-  m.Visualizar()
-  m.Modificar()
-  t.ModificarMecanico(m)
-  t.MecanicosDisponibles()
+
+  for{
+    opt, status := menuFunc(menu)
+    
+    if status == 0{
+      switch opt{
+        case 1:
+          t.Menu()
+        case 2:
+          // Clientes
+        case 3:
+          // Vehiculos
+        case 4:
+          // Incidencias
+        case 5:
+          t.MenuMecanicos()
+      }
+    } else if status == 2{
+      break
+    }
+  }
+  
 }
