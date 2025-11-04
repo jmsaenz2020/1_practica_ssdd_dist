@@ -387,13 +387,50 @@ func (c1 Cliente)Igual(c2 Cliente) (bool){
   return c1.Id == c2.Id
 }
 
-type Vehiculo struct{
 
+type Vehiculo struct{
+  Matricula string
+  Marca string
+  Modelo string
+  FechaEntrada string
+  FechaSalida string
+  Incidencias []Incidencia
+}
+
+func (v Vehiculo)Info() (string){
+  return fmt.Sprintf("%s %s (%s)", v.Marca, v.Modelo, v.Matricula)
+}
+
+func (v Vehiculo)Visualizar(){
+  fmt.Printf("%sMatricula: %s%s\n", BOLD, END, v.Matricula)
+  fmt.Printf("%sMarca: %s%s\n", BOLD, END, v.Marca)
+  fmt.Printf("%sModelo: %s%s\n", BOLD, END, v.Modelo)
+  fmt.Printf("%sFecha de entrada: %s%s\n", BOLD, END, v.FechaEntrada)
+  fmt.Printf("%sFecha estimada de entrada: %s%s\n", BOLD, END, v.FechaSalida)
+  // Incidencias
 }
 
 
 type Incidencia struct{
+  Id int
+  Mecanicos []Mecanico
+  Tipo int
+  Prioridad int
+  Descripcion string
+  Estado int
+}
 
+func (i Incidencia)Info() (string){
+  return fmt.Sprintf("%s (%03d)", i.Descripcion, i.Id)
+}
+
+func (i Incidencia)Visualizar(){
+  fmt.Printf("%sId: %s%03d\n", BOLD, END, i.Id)
+  fmt.Printf("%sMarca: %s%d\n", BOLD, END, i.Tipo)
+  fmt.Printf("%sModelo: %s%d\n", BOLD, END, i.Prioridad)
+  fmt.Printf("%sFecha de entrada: %s%s\n", BOLD, END, i.Descripcion)
+  fmt.Printf("%sFecha estimada de entrada: %s%d\n", BOLD, END, i.Estado)
+  // Mecanicos
 }
 
 
