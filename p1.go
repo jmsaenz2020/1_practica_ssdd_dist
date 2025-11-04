@@ -113,7 +113,7 @@ func (t *Taller)MenuClientes(){
           c.Inicializar()
           t.CrearCliente(c)
           if !c.Valido() {
-            errorMsg("No se ha creado el mecánico")
+            errorMsg("No se ha creado el cliente")
           }
         case 2:
           for {
@@ -122,6 +122,7 @@ func (t *Taller)MenuClientes(){
             c = t.ObtenerClientePorId(id)
             if c.Valido(){
               t.EliminarCliente(c)
+              break
             }
           }
         default:
@@ -379,7 +380,7 @@ func (c *Cliente)Modificar(){
 }
 
 func (c Cliente)Valido() (bool){
-  return true
+  return c.Id > 0 && len(c.Nombre) > 0 && c.Telefono > 0 && len(c.Email) > 0
 }
 
 func (c1 Cliente)Igual(c2 Cliente) (bool){
@@ -619,8 +620,11 @@ func main(){
     "Incidencias",
     "Mecánicos"}
 
+  // INICIALIZAR
   t.CrearMecanico("Pepe", 0, 0)
-  //t.CrearCliente()
+  c := Cliente{Id: 1, Nombre: "Laura", Telefono: 1, Email: "laura27@mail.com"}
+  t.CrearCliente(c)
+  // FIN INICIALIZAR
 
   for{
     opt, status := menuFunc(menu)
