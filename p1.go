@@ -52,33 +52,33 @@ func (t *Taller)MenuMecanicos(){
   var menu []string
   var m Mecanico
 
-  if len(t.Mecanicos) > 0{
-    for{
-      menu = []string{
-        "Selecciona un mecánico",
-        "Crear Mecánico"}
-      for _, m := range t.Mecanicos{
-        menu = append(menu, m.Info())
-      }
+  for{
+    menu = []string{
+      "Selecciona un mecánico",
+      "Crear Mecánico",
+      "Eliminar Mecánico"}
+    for _, m := range t.Mecanicos{
+      menu = append(menu, m.Info())
+    }
 
-      opt, status := menuFunc(menu)
-      
-      if status == 0{
-        if opt > 1{
-          t.Mecanicos[opt - 2].Menu()
-        } else {
+    opt, status := menuFunc(menu)
+    
+    if status == 0{
+      switch opt{
+        case 1:
           m.Inicializar()
           t.CrearMecanico(m.Nombre, m.Especialidad, m.Experiencia)
           if !m.Valido() {
             errorMsg("No se ha creado el mecánico")
           }
-        }
-      } else if status == 2{
-        break
+        case 2:
+          t.SeleccionarEliminado()
+        default:
+          t.Mecanicos[opt - 3].Menu()
       }
+    } else if status == 2{
+      break
     }
-  } else {
-    warningMsg("No hay mecánicos en el taller")
   }
 }
 
@@ -109,6 +109,41 @@ func (t *Taller)EliminarMecanico(m Mecanico){
   } else {
     errorMsg("No se pudo eliminar al mecánico")
   }
+}
+
+func (t *Taller)SeleccionarEliminado(){
+  menu := []string{"Selecciona un mecánico"}
+  var buf string
+
+  for{
+    if len(t.Mecanicos) > 0{
+      for _, m := range t.Mecanicos{
+        menu = append(menu, m.Info())
+      }
+
+      opt, status := menuFunc(menu)
+
+      if status == 0{
+        m := t.Mecanicos[opt - 1]
+        for {
+          fmt.Println(m.Info(), "va a ser eliminado. ¿Estás seguro? [y/n]")
+          leerStr(&buf)
+          if buf == "y"{
+            t.EliminarMecanico(m)
+            break
+          } else if buf == "n"{
+            break
+          }
+        }
+      } else if status == 2{
+        break
+      }
+    } else {
+      warningMsg("No hay mecánicos en el taller")
+      break
+    }
+  }
+  
 }
 
 func (t Taller)ObtenerIndiceMecanico(m_in Mecanico) (int){
