@@ -52,7 +52,6 @@ func (t *Taller)MenuMecanicos(){
   var menu []string
   var m Mecanico
   var id int
-  var buf string
 
   for{
     menu = []string{
@@ -79,14 +78,8 @@ func (t *Taller)MenuMecanicos(){
             leerInt(&id)
             m = t.ObtenerMecanicoPorId(id)
             if m.Valido(){
-              fmt.Println(m.Info(), "va a ser eliminado. ¿Estás seguro? [y/n]")
-              leerStr(&buf)
-              if buf == "y"{
-                t.EliminarMecanico(m)
-                break
-              } else if buf == "n"{
-                break
-              }
+              t.EliminarMecanico(m)
+              break
             }
           }
         default:
@@ -102,7 +95,6 @@ func (t *Taller)MenuClientes(){
   var menu []string
   var c Cliente
   var id int
-  var buf string
 
   for{
     menu = []string{
@@ -118,25 +110,18 @@ func (t *Taller)MenuClientes(){
     if status == 0{
       switch opt{
         case 1:
-          /*c.Inicializar()
+          c.Inicializar()
           t.CrearCliente(c)
           if !c.Valido() {
             errorMsg("No se ha creado el mecánico")
-          }*/
+          }
         case 2:
           for {
             fmt.Println("Introduzca el ID del cliente")
             leerInt(&id)
-            //c = t.ObtenerClientePorId(id)
+            c = t.ObtenerClientePorId(id)
             if c.Valido(){
-              fmt.Println(c.Info(), "va a ser eliminado. ¿Estás seguro? [y/n]")
-              leerStr(&buf)
-              if buf == "y"{
-                t.EliminarCliente(c)
-                break
-              } else if buf == "n"{
-                break
-              }
+              t.EliminarCliente(c)
             }
           }
         default:
@@ -154,13 +139,15 @@ func (t *Taller)CrearMecanico(nombre string, especialidad int, experiencia int){
   m.Nombre = nombre
   m.Especialidad = especialidad
   m.Experiencia = experiencia
-  m.Id = 1
+  m.Id = t.UltimoId + 1
 
-  if m.Valido(){
+  if m.Valido() && t.ObtenerIndiceMecanico(m) == -1{
     t.UltimoId++
     m.Id = t.UltimoId
     m.Alta = true
     t.Mecanicos = append(t.Mecanicos, m)
+  } else {
+    errorMsg("No se ha podido crear al mecanico")
   }
 }
 
@@ -193,10 +180,6 @@ func (t *Taller)EliminarCliente(c Cliente){
   } else {
     errorMsg("No se pudo eliminar al mecánico")
   }
-}
-
-
-func (t *Taller)SeleccionarMecanicoEliminado(){
 }
 
 func (t Taller)ObtenerIndiceMecanico(m_in Mecanico) (int){
@@ -284,20 +267,115 @@ type Cliente struct{
   Vehiculos []Vehiculo
 }
 
+func (c *Cliente)Inicializar(){
+  var exit bool = false  
+
+  fmt.Printf("%sID%s\n", BOLD, END)
+  leerInt(&c.Id)
+  if c.Id == 0{
+    exit = true
+  }
+
+  if !exit{
+    fmt.Printf("%sNombre%s\n", BOLD, END)
+    leerStr(&c.Nombre)
+    if len(c.Nombre) == 0{
+      exit = true
+    }
+  }
+
+  if !exit{
+    fmt.Printf("%sTeléfono%s\n", BOLD, END)
+    leerInt(&c.Telefono)
+    if c.Telefono == 0{
+      exit = true
+    }
+  }
+
+  if !exit{
+    fmt.Printf("%sEmail%s\n", BOLD, END)
+    leerStr(&c.Email)
+    if len(c.Email) == 0{
+      exit = true
+    }
+  }
+}
+
 func (c Cliente)Info() (string){
   return fmt.Sprintf("%s (%08d)", c.Nombre, c.Id)
 }
 
 func (c Cliente)Visualizar(){
-  fmt.Printf("%sID: %s%03d\n", BOLD, END, c.Id)
+  fmt.Printf("%sID: %s%08d\n", BOLD, END, c.Id)
   fmt.Printf("%sNombre: %s%s\n", BOLD, END, c.Nombre)
   fmt.Printf("%sTeléfono: %s%09d\n", BOLD, END, c.Telefono)
   fmt.Printf("%sEmail: %s%s\n", BOLD, END, c.Email)
   // Vehiculos
 }
 
-func (c Cliente)Menu(){
+func (c *Cliente)Menu(){
+  menu := []string{
+    "Menu de cliente",
+    "Visualizar",
+    "Modificar"}
 
+  for{
+    menu[0] = fmt.Sprintf("Menu de %s", c.Nombre)
+
+    opt, status := menuFunc(menu)
+
+    if status == 0{
+      switch opt{
+        case 1:
+          c.Visualizar()
+        case 2:
+          c.Modificar()
+        default:
+          continue
+      }
+    } else if status == 2{
+      break
+    }
+  }
+}
+
+func (c *Cliente)Modificar(){
+  menu := []string{
+    "Modificar datos de cliente",
+    "ID",
+    "Nombre",
+    "Teléfono",
+    "Email",
+    "Vehiculos"}
+  var buf string
+  var num int
+
+  for{
+    menu[0] = fmt.Sprintf("Modificar datos de %s", c.Nombre)
+    opt, status := menuFunc(menu)
+    if status == 0{
+      switch opt{
+        case 1:
+          leerInt(&num)
+          c.Id = num
+          infoMsg("ID modificado")
+        case 2:
+          leerStr(&buf)
+          c.Nombre = buf
+          infoMsg("Nombre modificado")
+        case 3:
+          leerInt(&num)
+          c.Telefono = num
+          infoMsg("Teléfono modificado")
+        case 4:
+          leerStr(&buf)
+          c.Email = buf
+          infoMsg("Email modificado")
+      }
+    } else if status == 2{
+      break
+    }
+  }
 }
 
 func (c Cliente)Valido() (bool){
@@ -400,6 +478,7 @@ func (m Mecanico)Visualizar(){
 }
 
 func (m Mecanico)Valido() (bool){
+
   return m.Id > 0 && m.Id <= 999 && len(m.Nombre) > 0 && m.Experiencia >= 0 && m.Especialidad >= 0 && m.Especialidad <= 2
 }
 
