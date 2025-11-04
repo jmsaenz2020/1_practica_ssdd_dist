@@ -22,7 +22,7 @@ func (t *Taller)Menu(){
   menu := []string{
     "Menu del taller",
     "Listar incidencias",
-    "Listar vehiculos",
+    "Listar clientes con vehiculos en el taller",
     "Listar incidencias de mecánico",
     "Mecánicos disponibles"}
 
@@ -50,10 +50,13 @@ func (t *Taller)Menu(){
 
 func (t *Taller)MenuMecanicos(){
   var menu []string
+  var m Mecanico
 
   if len(t.Mecanicos) > 0{
     for{
-      menu = []string{"Selecciona un mecánico"}
+      menu = []string{
+        "Selecciona un mecánico",
+        "Crear Mecánico"}
       for _, m := range t.Mecanicos{
         menu = append(menu, m.Info())
       }
@@ -61,7 +64,15 @@ func (t *Taller)MenuMecanicos(){
       opt, status := menuFunc(menu)
       
       if status == 0{
-        t.Mecanicos[opt - 1].Menu()
+        if opt > 1{
+          t.Mecanicos[opt - 2].Menu()
+        } else {
+          m.Inicializar()
+          t.CrearMecanico(m.Nombre, m.Especialidad, m.Experiencia)
+          if !m.Valido() {
+            errorMsg("No se ha creado el mecánico")
+          }
+        }
       } else if status == 2{
         break
       }
@@ -72,31 +83,14 @@ func (t *Taller)MenuMecanicos(){
 }
 
 func (t *Taller)CrearMecanico(nombre string, especialidad int, experiencia int){
-  var err bool = false
   var m Mecanico
 
-  if len(nombre) > 0{
-    m.Nombre = nombre
-  } else {
-    err = true 
-    errorMsg("Nombre inválido")
-  }
+  m.Nombre = nombre
+  m.Especialidad = especialidad
+  m.Experiencia = experiencia
+  m.Id = 1
 
-  if especialidad >= 0 && especialidad <= 2{
-    m.Especialidad = especialidad
-  } else {
-    err = true 
-    errorMsg("Especialidad no reconocida")
-  }
-
-  if experiencia >= 0{
-    m.Experiencia = experiencia
-  } else {
-    err = true 
-    errorMsg("Valor de experiencia inválido")
-  }
-
-  if !err{
+  if m.Valido(){
     t.UltimoId++
     m.Id = t.UltimoId
     m.Alta = true
@@ -110,8 +104,8 @@ func (t *Taller)EliminarMecanico(m Mecanico){
     
   if indice >= 0{ // Eliminar
     lista := t.Mecanicos
-    lista[indice] = lista[len(lista) - 1]
-    t.Mecanicos = lista[:len(lista) - 1]
+    lista = lista[:indice+copy(lista[indice:], lista[indice+1:])]
+    t.Mecanicos = lista
   } else {
     errorMsg("No se pudo eliminar al mecánico")
   }
@@ -219,6 +213,41 @@ func (m *Mecanico)Menu(){
   }
 }
 
+func (m *Mecanico)Inicializar(){
+  var exit bool = false  
+
+  fmt.Printf("%sNombre%s\n", BOLD, END)
+  leerStr(&m.Nombre)
+  if len(m.Nombre) == 0{
+    exit = true
+  }
+
+  if !exit{
+    menu_esp := []string{
+    "Selecciona especialidad",
+    "Mecánica",
+    "Electrónica",
+    "Carrocería"}
+    for{
+      opt, status := menuFunc(menu_esp)
+      if status != 1{
+        if status == 0{
+          m.Especialidad = opt - 1
+        } else {
+          exit = true
+        }
+        break
+      }
+    }
+  }
+
+  if !exit{
+    fmt.Printf("%sExperiencia%s\n", BOLD, END)
+    leerInt(&m.Experiencia)
+    m.Id = 1
+  }
+}
+
 func (m Mecanico)Info() (string){
   return fmt.Sprintf("%s (%03d)", m.Nombre, m.Id)
 }
@@ -229,6 +258,10 @@ func (m Mecanico)Visualizar(){
   fmt.Printf("%sEspecialidad: %s%s\n", BOLD, END, m.ObtenerEspecialidad())
   fmt.Printf("%sExperiencia: %s%d años\n", BOLD, END, m.Experiencia)
   fmt.Printf("%s¿Está de alta? %s%t\n", BOLD, END, m.Alta)
+}
+
+func (m Mecanico)Valido() (bool){
+  return m.Id > 0 && m.Id <= 999 && len(m.Nombre) > 0 && m.Experiencia >= 0 && m.Especialidad >= 0 && m.Especialidad <= 2
 }
 
 func (m1 Mecanico)Igual(m2 Mecanico) (bool){
