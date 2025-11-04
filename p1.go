@@ -51,6 +51,8 @@ func (t *Taller)Menu(){
 func (t *Taller)MenuMecanicos(){
   var menu []string
   var m Mecanico
+  var id int
+  var buf string
 
   for{
     menu = []string{
@@ -72,9 +74,73 @@ func (t *Taller)MenuMecanicos(){
             errorMsg("No se ha creado el mecánico")
           }
         case 2:
-          t.SeleccionarEliminado()
+          for {
+            fmt.Println("Introduzca el ID del mecánico")
+            leerInt(&id)
+            m = t.ObtenerMecanicoPorId(id)
+            if m.Valido(){
+              fmt.Println(m.Info(), "va a ser eliminado. ¿Estás seguro? [y/n]")
+              leerStr(&buf)
+              if buf == "y"{
+                t.EliminarMecanico(m)
+                break
+              } else if buf == "n"{
+                break
+              }
+            }
+          }
         default:
           t.Mecanicos[opt - 3].Menu()
+      }
+    } else if status == 2{
+      break
+    }
+  }
+}
+
+func (t *Taller)MenuClientes(){
+  var menu []string
+  var c Cliente
+  var id int
+  var buf string
+
+  for{
+    menu = []string{
+      "Selecciona un cliente",
+      "Crear Cliente",
+      "Eliminar Cliente"}
+    for _, c := range t.Clientes{
+      menu = append(menu, c.Info())
+    }
+
+    opt, status := menuFunc(menu)
+    
+    if status == 0{
+      switch opt{
+        case 1:
+          /*c.Inicializar()
+          t.CrearCliente(c)
+          if !c.Valido() {
+            errorMsg("No se ha creado el mecánico")
+          }*/
+        case 2:
+          for {
+            fmt.Println("Introduzca el ID del cliente")
+            leerInt(&id)
+            //c = t.ObtenerClientePorId(id)
+            if c.Valido(){
+              fmt.Println(c.Info(), "va a ser eliminado. ¿Estás seguro? [y/n]")
+              leerStr(&buf)
+              if buf == "y"{
+                t.EliminarCliente(c)
+                break
+              } else if buf == "n"{
+                break
+              }
+            }
+          }
+        default:
+          t.Clientes[opt - 3].Menu()
       }
     } else if status == 2{
       break
@@ -98,6 +164,12 @@ func (t *Taller)CrearMecanico(nombre string, especialidad int, experiencia int){
   }
 }
 
+func (t *Taller)CrearCliente(c Cliente){
+  if c.Valido(){
+    t.Clientes = append(t.Clientes, c)
+  }
+}
+
 func (t *Taller)EliminarMecanico(m Mecanico){
   
   indice := t.ObtenerIndiceMecanico(m)
@@ -111,39 +183,20 @@ func (t *Taller)EliminarMecanico(m Mecanico){
   }
 }
 
-func (t *Taller)SeleccionarEliminado(){
-  menu := []string{"Selecciona un mecánico"}
-  var buf string
-
-  for{
-    if len(t.Mecanicos) > 0{
-      for _, m := range t.Mecanicos{
-        menu = append(menu, m.Info())
-      }
-
-      opt, status := menuFunc(menu)
-
-      if status == 0{
-        m := t.Mecanicos[opt - 1]
-        for {
-          fmt.Println(m.Info(), "va a ser eliminado. ¿Estás seguro? [y/n]")
-          leerStr(&buf)
-          if buf == "y"{
-            t.EliminarMecanico(m)
-            break
-          } else if buf == "n"{
-            break
-          }
-        }
-      } else if status == 2{
-        break
-      }
-    } else {
-      warningMsg("No hay mecánicos en el taller")
-      break
-    }
+func (t *Taller)EliminarCliente(c Cliente){
+  indice := t.ObtenerIndiceCliente(c)
+    
+  if indice >= 0{ // Eliminar
+    lista := t.Clientes
+    lista = lista[:indice+copy(lista[indice:], lista[indice+1:])]
+    t.Clientes = lista
+  } else {
+    errorMsg("No se pudo eliminar al mecánico")
   }
-  
+}
+
+
+func (t *Taller)SeleccionarMecanicoEliminado(){
 }
 
 func (t Taller)ObtenerIndiceMecanico(m_in Mecanico) (int){
@@ -164,6 +217,30 @@ func (t Taller)ObtenerMecanicoPorId(id int) (Mecanico){
   for i, m := range t.Mecanicos{
     if m.Id == id{
       res = t.Mecanicos[i]
+    }
+  }
+
+  return res
+}
+
+func (t Taller)ObtenerClientePorId(id int) (Cliente){
+  var res Cliente
+
+  for i, m := range t.Clientes{
+    if m.Id == id{
+      res = t.Clientes[i]
+    }
+  }
+
+  return res
+}
+
+func (t Taller)ObtenerIndiceCliente(c_in Cliente) (int){
+  var res int = -1
+
+  for i, c := range t.Clientes{
+    if c.Igual(c_in){
+      res = i
     }
   }
 
@@ -200,9 +277,36 @@ func (t *Taller)ModificarMecanico(modif Mecanico){
 
 
 type Cliente struct{
+  Id int
+  Nombre string
+  Telefono int
+  Email string
+  Vehiculos []Vehiculo
+}
+
+func (c Cliente)Info() (string){
+  return fmt.Sprintf("%s (%08d)", c.Nombre, c.Id)
+}
+
+func (c Cliente)Visualizar(){
+  fmt.Printf("%sID: %s%03d\n", BOLD, END, c.Id)
+  fmt.Printf("%sNombre: %s%s\n", BOLD, END, c.Nombre)
+  fmt.Printf("%sTeléfono: %s%09d\n", BOLD, END, c.Telefono)
+  fmt.Printf("%sEmail: %s%s\n", BOLD, END, c.Email)
+  // Vehiculos
+}
+
+func (c Cliente)Menu(){
 
 }
 
+func (c Cliente)Valido() (bool){
+  return true
+}
+
+func (c1 Cliente)Igual(c2 Cliente) (bool){
+  return c1.Id == c2.Id
+}
 
 type Vehiculo struct{
 
@@ -437,6 +541,7 @@ func main(){
     "Mecánicos"}
 
   t.CrearMecanico("Pepe", 0, 0)
+  //t.CrearCliente()
 
   for{
     opt, status := menuFunc(menu)
@@ -446,7 +551,7 @@ func main(){
         case 1:
           t.Menu()
         case 2:
-          // Clientes
+          t.MenuClientes()
         case 3:
           // Vehiculos
         case 4:
