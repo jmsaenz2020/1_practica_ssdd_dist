@@ -481,7 +481,31 @@ func (v Vehiculo)Visualizar(){
   // Incidencias
 }
 
-func (v *Vehiculo)Menu(){}
+func (v *Vehiculo)Menu(){
+  menu := []string{
+    "Menu de vehiculo",
+    "Visualizar",
+    "Modificar"}
+
+  for{
+    menu[0] = fmt.Sprintf("Menu de %s", v.Info())
+
+    opt, status := menuFunc(menu)
+
+    if status == 0{
+      switch opt{
+        case 1:
+          v.Visualizar()
+        case 2:
+          //v.Modificar()
+        default:
+          continue
+      }
+    } else if status == 2{
+      break
+    }
+  }
+}
 
 func (v *Vehiculo)Inicializar(){
   var exit bool = false
@@ -614,7 +638,31 @@ func (i Incidencia)Visualizar(){
   // Mecanicos
 }
 
-func (i *Incidencia)Menu(){}
+func (i *Incidencia)Menu(){
+  menu := []string{
+    "Menu de incidencia",
+    "Visualizar",
+    "Modificar"}
+
+  for{
+    menu[0] = fmt.Sprintf("Menu de %s", i.Info())
+
+    opt, status := menuFunc(menu)
+
+    if status == 0{
+      switch opt{
+        case 1:
+          i.Visualizar()
+        case 2:
+          //i.Modificar()
+        default:
+          continue
+      }
+    } else if status == 2{
+      break
+    }
+  }
+}
 
 func (i *Incidencia)Inicializar(){
   var exit bool = false
