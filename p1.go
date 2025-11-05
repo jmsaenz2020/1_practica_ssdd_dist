@@ -13,7 +13,7 @@ const END = "\033[0m"
 
 type Taller struct{
   Clientes []Cliente
-  Plazas *[]Vehiculo
+  Plazas []Vehiculo
   Mecanicos []Mecanico
   UltimoId int
 }
@@ -34,9 +34,9 @@ func (t *Taller)Menu(){
         case 1:
           // Listar Incidencias
         case 2:
-          // Listar Vehiculos
+          // Clientes con vehiculo
         case 3:
-          // Listar por mecánico
+          // Incidencias por mecánico
         case 4:
           t.MecanicosDisponibles()
         default:
@@ -269,7 +269,7 @@ type Cliente struct{
 }
 
 func (c *Cliente)Inicializar(){
-  var exit bool = false  
+  var exit bool = false
 
   fmt.Printf("%sID%s\n", BOLD, END)
   leerInt(&c.Id)
@@ -300,6 +300,11 @@ func (c *Cliente)Inicializar(){
       exit = true
     }
   }
+
+  // Ya está creado el cliente base (sin vehículos)
+  if !exit{
+    c.MenuVehiculos()
+  }
 }
 
 func (c Cliente)Info() (string){
@@ -311,7 +316,59 @@ func (c Cliente)Visualizar(){
   fmt.Printf("%sNombre: %s%s\n", BOLD, END, c.Nombre)
   fmt.Printf("%sTeléfono: %s%09d\n", BOLD, END, c.Telefono)
   fmt.Printf("%sEmail: %s%s\n", BOLD, END, c.Email)
-  // Vehiculos
+  fmt.Printf("%sVehiculos:%s\n", BOLD, END)
+  c.ListarVehiculos()
+}
+
+func (c *Cliente)MenuVehiculos(){
+  var v Vehiculo  
+  menu := []string{
+    "Seleccione un vehículo",
+    "Crear vehículo",
+    "Eliminar vehículo"}
+
+  for{
+    menu = []string{
+      "Seleccione un vehículo",
+      "Crear vehículo",
+      "Eliminar vehículo"}
+    for _, v := range c.Vehiculos{
+      menu = append(menu, v.Info())
+    }
+
+    opt, status := menuFunc(menu)
+
+    if status == 0{
+      if opt == 1{
+        v.Inicializar()
+        c.CrearVehiculo(v)
+      } else if opt == 2{
+        // Eliminar vehiculo
+      } else {
+        c.Vehiculos[opt - 3].Menu()
+      }
+    } else if status == 2{
+      break
+    }
+  }
+}
+
+func (c *Cliente)CrearVehiculo(v Vehiculo){
+  if v.Valido() && c.ObtenerIndiceVehiculo(v) == -1{
+    c.Vehiculos = append(c.Vehiculos, v)
+  } else {
+    errorMsg("No se ha podido crear el vehículo")
+  }
+}
+
+func (c Cliente)ListarVehiculos(){
+  if len(c.Vehiculos) > 0{
+    for _, v := range c.Vehiculos{
+      fmt.Printf("  %s·%s%s\n", BOLD, END, v.Info())
+    }
+  } else {
+    fmt.Println(BOLD + "  SIN VEHICULOS" + END)
+  }
 }
 
 func (c *Cliente)Menu(){
@@ -372,6 +429,8 @@ func (c *Cliente)Modificar(){
           leerStr(&buf)
           c.Email = buf
           infoMsg("Email modificado")
+        case 5:
+          c.MenuVehiculos()
       }
     } else if status == 2{
       break
@@ -387,9 +446,21 @@ func (c1 Cliente)Igual(c2 Cliente) (bool){
   return c1.Id == c2.Id
 }
 
+func (c Cliente)ObtenerIndiceVehiculo(v_in Vehiculo) (int){
+  var res int = -1
+
+  for i, v := range c.Vehiculos{
+    if v.Igual(v_in){
+      res = i
+    }
+  }
+
+  return res
+}
+
 
 type Vehiculo struct{
-  Matricula string
+  Matricula int
   Marca string
   Modelo string
   FechaEntrada string
@@ -398,11 +469,11 @@ type Vehiculo struct{
 }
 
 func (v Vehiculo)Info() (string){
-  return fmt.Sprintf("%s %s (%s)", v.Marca, v.Modelo, v.Matricula)
+  return fmt.Sprintf("%s %s (%05d)", v.Marca, v.Modelo, v.Matricula)
 }
 
 func (v Vehiculo)Visualizar(){
-  fmt.Printf("%sMatricula: %s%s\n", BOLD, END, v.Matricula)
+  fmt.Printf("%sMatricula: %s%05d\n", BOLD, END, v.Matricula)
   fmt.Printf("%sMarca: %s%s\n", BOLD, END, v.Marca)
   fmt.Printf("%sModelo: %s%s\n", BOLD, END, v.Modelo)
   fmt.Printf("%sFecha de entrada: %s%s\n", BOLD, END, v.FechaEntrada)
@@ -410,14 +481,124 @@ func (v Vehiculo)Visualizar(){
   // Incidencias
 }
 
+func (v *Vehiculo)Menu(){}
+
+func (v *Vehiculo)Inicializar(){
+  var exit bool = false
+
+  fmt.Printf("%sMatricula%s\n", BOLD, END)
+  leerInt(&v.Matricula)
+  if v.Matricula == 0{
+    exit = true
+  }
+
+  if !exit{
+    fmt.Printf("%sMarca%s\n", BOLD, END)
+    leerStr(&v.Marca)
+    if len(v.Marca) == 0{
+      exit = true
+    }
+  }
+
+  if !exit{
+    fmt.Printf("%sModelo%s\n", BOLD, END)
+    leerStr(&v.Modelo)
+    if len(v.Modelo) == 0{
+      exit = true
+    }
+  }
+
+  if !exit{
+    fmt.Printf("%sFecha de entrada%s\n", BOLD, END)
+    leerStr(&v.FechaEntrada)
+    if len(v.FechaEntrada) == 0{
+      exit = true
+    }
+  }
+
+  if !exit{
+    fmt.Printf("%sFecha estimada de salida%s\n", BOLD, END)
+    leerStr(&v.FechaSalida)
+    if len(v.FechaSalida) == 0{
+      exit = true
+    }
+  }
+
+  if !exit{
+    fmt.Printf("%sIncidencias:%s\n", BOLD, END)
+    v.MenuIncidencias()
+  }
+}
+
+func (v *Vehiculo)MenuIncidencias(){
+  var i Incidencia  
+  menu := []string{
+    "Seleccione una incidencia",
+    "Crear incidencia",
+    "Eliminar incidencia"}
+
+  for{
+    menu = []string{
+      "Seleccione una incidencia",
+      "Crear incidencia",
+      "Eliminar incidencia"}
+    for _, i := range v.Incidencias{
+      menu = append(menu, i.Info())
+    }
+
+    opt, status := menuFunc(menu)
+
+    if status == 0{
+      if opt == 1{
+        i.Inicializar()
+        v.CrearIncidencia(i)
+      } else if opt == 2{
+        // Eliminar vehiculo
+      } else {
+        v.Incidencias[opt - 3].Menu()
+      }
+    } else if status == 2{
+      break
+    }
+  }
+}
+
+func (v Vehiculo)ObtenerIndiceIncidencia(i_in Incidencia) (int){
+  var res int = -1
+
+  for i, inc := range v.Incidencias{
+    if inc.Igual(i_in){
+      res = i
+    }
+  }
+
+  return res
+}
+
+func (v *Vehiculo)CrearIncidencia(i Incidencia){
+  if i.Valido() && v.ObtenerIndiceIncidencia(i) == -1{
+    v.Incidencias = append(v.Incidencias, i)
+  } else {
+    errorMsg("No se ha podido crear el vehículo")
+  }
+}
+
+func (v Vehiculo)Valido() (bool){
+  return v.Matricula > 0 && len(v.Marca) > 0 && len(v.Modelo) > 0
+}
+
+func (v1 Vehiculo)Igual(v2 Vehiculo) (bool){
+  return v1.Matricula == v2.Matricula
+}
+
 
 type Incidencia struct{
   Id int
   Mecanicos []Mecanico
-  Tipo int
-  Prioridad int
+  Tipo int // 1 (Mecánica), 2 (Electrónica), 3(Carrocería)
+  Prioridad int // 1 a 3 (Alta a baja)
   Descripcion string
-  Estado int
+  Estado int // 0 (Cerrado), 1 (Abierta), 2 (En proceso)
 }
 
 func (i Incidencia)Info() (string){
@@ -431,6 +612,53 @@ func (i Incidencia)Visualizar(){
   fmt.Printf("%sFecha de entrada: %s%s\n", BOLD, END, i.Descripcion)
   fmt.Printf("%sFecha estimada de entrada: %s%d\n", BOLD, END, i.Estado)
   // Mecanicos
+}
+
+func (i *Incidencia)Menu(){}
+
+func (i *Incidencia)Inicializar(){
+  var exit bool = false
+
+  fmt.Printf("%sID%s\n", BOLD, END)
+  leerInt(&i.Id)
+  if i.Id == 0{
+    exit = true
+  }
+
+  if !exit{
+    fmt.Printf("%sTipo%s\n", BOLD, END)
+    leerInt(&i.Tipo)
+    if i.Tipo == 0{
+      exit = true
+    }
+  }
+
+  if !exit{
+    fmt.Printf("%sPrioridad%s\n", BOLD, END)
+    leerInt(&i.Prioridad)
+    if i.Prioridad == 0{
+      exit = true
+    }
+  }
+
+  if !exit{
+    fmt.Printf("%sDescripción%s\n", BOLD, END)
+    leerStr(&i.Descripcion)
+    if len(i.Descripcion) == 0{
+      exit = true
+    } else {
+      i.Estado = 1
+    }
+  }
+
+}
+
+func (i Incidencia)Valido() (bool){
+  return i.Id > 0
+}
+
+func (i1 Incidencia)Igual(i2 Incidencia) (bool){
+  return i1.Id == i2.Id
 }
 
 
@@ -653,13 +881,13 @@ func main(){
     "Menu principal",
     "Taller",
     "Clientes",
-    "Vehiculos",
-    "Incidencias",
     "Mecánicos"}
 
   // INICIALIZAR
   t.CrearMecanico("Pepe", 0, 0)
   c := Cliente{Id: 1, Nombre: "Laura", Telefono: 1, Email: "laura27@mail.com"}
+  v := Vehiculo{Matricula: 1234, Marca: "Toyota", Modelo: "Camry", FechaEntrada: "14-04-2009", FechaSalida: "19-04-2009"}
+  c.CrearVehiculo(v)
   t.CrearCliente(c)
   // FIN INICIALIZAR
 
@@ -673,10 +901,6 @@ func main(){
         case 2:
           t.MenuClientes()
         case 3:
-          // Vehiculos
-        case 4:
-          // Incidencias
-        case 5:
           t.MenuMecanicos()
       }
     } else if status == 2{
